@@ -8,6 +8,7 @@ import (
 	"github.com/go-debos/fakemachine"
 	"github.com/jessevdk/go-flags"
 	"os"
+	"runtime/debug"
 	"strings"
 )
 
@@ -29,6 +30,42 @@ type Options struct {
 
 var options Options
 var parser = flags.NewParser(&options, flags.Default)
+
+func GetDeterminedVersion(version string) {
+
+	DeterminedVersion := "unknown"
+
+	// Use the injected Version from build system if any.
+	if len(Version) > 0 {
+		DeterminedVersion = Version
+	// Otherwise try to determine the best version string from debug info.
+	} else {
+		info, ok := debug.ReadBuildInfo();
+		if ok {
+			// Try vcs version first as it will only be set on a local build
+			var revision *string;
+			var modified *string;
+			for _, s := range info.Settings {
+				if s.Key == "vcs.revision" {
+					revision = &s.Value
+				}
+				if s.Key == "vcs.modified" {
+					modified = &s.Value
+				}
+			}
+			if revision != nil {
+				DeterminedVersion = *revision;
+				if modified != nil && *modified == "true" {
+					DeterminedVersion += "-dirty"
+				}
+			} else {
+				DeterminedVersion = info.Main.Version
+			}
+		}
+	}
+
+	return DeterminedVersion
+}
 
 func warnLocalhost(variable string, value string) {
 	message := `WARNING: Environment variable %[1]s contains a reference to
@@ -155,7 +192,7 @@ func main() {
 	}
 
 	if options.Version {
-		fmt.Printf("fakemachine %s\n", Version)
+		fmt.Printf("fakemachine %v\n", GetDeterminedVersion(Version))
 		return
 	}
 
