@@ -31,20 +31,19 @@ type Options struct {
 var options Options
 var parser = flags.NewParser(&options, flags.Default)
 
-func GetDeterminedVersion(version string) {
-
+func GetDeterminedVersion(version string) string {
 	DeterminedVersion := "unknown"
 
 	// Use the injected Version from build system if any.
-	if len(Version) > 0 {
-		DeterminedVersion = Version
 	// Otherwise try to determine the best version string from debug info.
+	if len(version) > 0 {
+		DeterminedVersion = version
 	} else {
-		info, ok := debug.ReadBuildInfo();
+		info, ok := debug.ReadBuildInfo()
 		if ok {
 			// Try vcs version first as it will only be set on a local build
-			var revision *string;
-			var modified *string;
+			var revision *string
+			var modified *string
 			for _, s := range info.Settings {
 				if s.Key == "vcs.revision" {
 					revision = &s.Value
@@ -54,7 +53,7 @@ func GetDeterminedVersion(version string) {
 				}
 			}
 			if revision != nil {
-				DeterminedVersion = *revision;
+				DeterminedVersion = *revision
 				if modified != nil && *modified == "true" {
 					DeterminedVersion += "-dirty"
 				}
