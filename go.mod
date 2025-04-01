@@ -1,4 +1,4 @@
-module github.com/go-debos/fakemachine
+module github.com/daissi/fakemachine
 
 go 1.24
 
